@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A forma do som — v2 · etapa 1</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<button id="alternar-painel" class="alternar-painel" type="button" aria-controls="painel" aria-expanded="true">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16M9 4v6M15 14v6"/></svg><span>Leitura</span>
+</button>
+
+<aside id="painel" class="painel" aria-label="Painel de leitura">
+  <header class="cabecalho-painel">
+    <h1>A forma do som.</h1>
+    <button id="fechar-painel" type="button" aria-label="Ocultar painel">×</button>
+  </header>
+  <p class="etapa">v2 · etapa 1 — a leitura, sem nenhuma forma</p>
+
+  <div class="grupo">
+    <span class="rotulo">Faixa</span>
+    <div class="envio">
+      <label class="botao-arquivo" for="arquivo">Escolher arquivo</label>
+      <input id="arquivo" type="file" accept="audio/*" class="sr-only">
+      <button type="button" id="usar-exemplo" class="botao-texto">Usar o áudio do protótipo</button>
+    </div>
+    <p class="nota" id="nome-faixa">Ou arraste um arquivo de áudio para a página.</p>
+  </div>
+
+  <div class="grupo" id="grupo-calibracao">
+    <div class="titulo-grupo"><span class="rotulo">Calibração</span>
+      <span class="medidor" id="estado-calibracao">nenhuma faixa</span></div>
+    <dl class="calibracao" id="dados-calibracao"></dl>
+    <p class="nota">Antes de desenhar, a página lê a faixa inteira e mede onde o brilho de
+      cada banda está. Só o modo arquivo permite isso — ao vivo não se conhece o futuro.</p>
+  </div>
+
+  <div class="grupo">
+    <div class="titulo-grupo">
+      <span class="rotulo">Leitura</span>
+      <span class="medidor"><span id="relogio-leitura">0,0 s</span> · <span id="contagem-quadros">0 leituras</span></span>
+    </div>
+    <table class="leitura">
+      <thead><tr><th>medida</th><th>valor</th><th>causa na tela</th></tr></thead>
+      <tbody id="tabela-leitura"><tr><td colspan="3" class="vazio">Reproduza para começar a medir.</td></tr></tbody>
+    </table>
+    <div class="envio"><button type="button" id="salvar-quadro" class="botao-texto">Salvar este quadro</button></div>
+    <p class="nota">A medida chama-se <strong>brilho</strong> — centroide espectral. Não é altura de nota
+      nem transcrição: uma nota grave de timbre brilhante lê alto.</p>
+  </div>
+
+  <details class="conferencia">
+    <summary>Conferir a captura</summary>
+    <dl id="dados-captura"><div><dt>estado</dt><dd>aguardando</dd></div></dl>
+    <p class="nota">Compare com o medido em 18/09: o brilho da faixa média-aguda deve ficar
+      entre cerca de 855 e 2.913 Hz, e os ataques em torno de 1,6 por segundo.</p>
+  </details>
+
+  <div class="grupo">
+    <span class="rotulo">Disposição</span>
+    <div class="seletor" id="composicao" role="group" aria-label="Disposição das formas">
+      <button type="button" data-composicao="separadas" aria-pressed="true">Separadas</button>
+      <button type="button" data-composicao="sobrepostas" aria-pressed="false">Sobrepostas</button>
+    </div>
+    <p class="nota" id="nota-composicao"></p>
+  </div>
+
+  <div class="grupo">
+    <span class="rotulo">Simetria</span>
+    <div class="seletor" id="assimetria" role="group" aria-label="Simetria do contorno">
+      <button type="button" data-assimetria="simetrica" aria-pressed="false">Simétrica</button>
+      <button type="button" data-assimetria="ornamento" aria-pressed="false">Ornamento</button>
+      <button type="button" data-assimetria="medida" aria-pressed="true">Medida</button>
+    </div>
+    <div class="linha-controle" id="linha-forca">
+      <label for="forca-assimetria">Força do desvio</label><output id="valor-forca">0,70</output>
+    </div>
+    <input id="forca-assimetria" type="range" min="0" max="1.2" step="0.05" value="0.7">
+    <p class="nota" id="nota-assimetria"></p>
+  </div>
+
+  <div class="grupo">
+    <div class="linha-controle"><label for="volume">Volume de escuta</label><output id="valor-volume">60%</output></div>
+    <input id="volume" type="range" min="0" max="1" step="0.01" value="0.6">
+    <p class="nota">O volume de escuta não altera a leitura.</p>
+  </div>
+</aside>
+
+<main id="palco">
+  <div class="campo" id="campo">
+    <canvas id="tela" width="1920" height="1080" role="img"
+            aria-label="Duas formas abstratas reagindo ao som"></canvas>
+    <p class="aviso-campo" id="aviso-campo">
+      <span>Escolha uma faixa para começar.</span>
+      <small>A página lê o arquivo inteiro antes de desenhar, para calibrar as escalas naquele material.</small>
+    </p>
+  </div>
+  <div class="alvo-arraste" id="alvo-arraste" hidden><span>Solte o arquivo de áudio</span></div>
+</main>
+
+<div class="transporte" id="transporte" role="group" aria-label="Reprodução">
+  <div class="botoes">
+    <button id="recomecar" class="icone" type="button" aria-label="Voltar ao início" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5v14M19 5l-10 7 10 7Z"/></svg></button>
+    <button id="tocar" class="icone tocar" type="button" aria-label="Reproduzir">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path id="icone-play" d="m9 5 11 7-11 7Z"/><path id="icone-pause" d="M8 5v14M16 5v14" hidden/></svg></button>
+    <button id="mudo" class="icone" type="button" aria-label="Silenciar" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4Z"/><path id="icone-som" d="M17 8a6 6 0 0 1 0 8M20 5a10 10 0 0 1 0 14"/><path id="icone-mudo" d="m17 9 5 6m0-6-5 6" hidden/></svg></button>
+  </div>
+  <div class="linha-tempo">
+    <time id="tempo">00:00,0</time>
+    <label for="posicao" class="sr-only">Posição do áudio</label>
+    <input type="range" id="posicao" min="0" max="100" step="0.1" value="0">
+    <span id="duracao">--:--,-</span>
+  </div>
+</div>
+
+<p id="mensagem" role="status" aria-live="polite" class="mensagem"></p>
+<audio id="audio" preload="auto" crossorigin="anonymous"></audio>
+
+<script src="config.js"></script>
+<script src="leitura.js"></script>
+<script src="pre-analise.js"></script>
+<script src="forma.js"></script>
+<script src="painel.js"></script>
+<script src="pagina.js"></script>
+</body>
+</html>
